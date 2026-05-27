@@ -38,7 +38,6 @@ def kaon_probability_mask(k_threshold=0.85): # change the treshold if you want m
 
     return mask
 
-
 ###Plotting two graphs next to each other
 
 def plot_with_cuts(variable, k_threshold=0.85,
@@ -63,13 +62,14 @@ def plot_with_cuts(variable, k_threshold=0.85,
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
 
     axes[0].hist(data, bins=bins, range=(x_min, x_max), histtype="step")
-    axes[0].set_title("Original distribution")
+    axes[0].set_title("Original")
     axes[0].set_xlabel(xlabel)
     axes[0].set_ylabel("Number of events")
 
     axes[1].hist(filtered_data, bins=bins, range=(x_min, x_max), histtype="step")
     axes[1].set_title(f"After cuts: Kplus_ProbNNk > {k_threshold}")
-    
+    axes[1].set_xlabel(xlabel)
+    axes[1].set_ylabel("Number of events")
 
     plt.tight_layout()
     plt.show()
@@ -92,20 +92,11 @@ bins_slider = widgets.IntSlider(
     step=1,
     description="Bins:"
 )
-"""
-threshold_slider = widgets.FloatSlider(
-    value=1.0,
-    min=0.0,
-    max=100.0,
-    step=0.1,
-    description="Threshold:" 
-    )"""
 
 
 widgets.interact(
     plot_with_cuts,
     variable=variable_dropdown,
-    #threshold=threshold_slider,
     bins=bins_slider,
     x_min=widgets.FloatText(value=None, description="x min"),
     x_max=widgets.FloatText(value=None, description="x max")
