@@ -16,32 +16,32 @@ print(tree.keys())
 
 #reading branches from the list
 all_branches = tree.keys()
-
+variables = list(tree.keys())
 
 ###Conditions###
 #Add new functions and limits here 
-variables = list(tree.keys())
+
 
 def kaon_probability_mask(k_threshold=0.85): # change the treshold if you want more or less stict cuts
     kplus = tree["Kplus_ProbNNk"].array(library="np")
     mask = np.isfinite(kplus) & (kplus > k_threshold)
-
     return mask
 
+#example of condition to be changed later/ add similar functions below
 def momentum_mask(pt_min=1000): # change the treshold if you want more or less stict cuts
     pt = tree["B0_PT"].array(library="np")
     return np.isfinite(pt) & (pt > pt_min)
+
+
 #combine conditions -add new masks to variable list here
-
-
-
-def combine_masks(k_threshold=0.85, pt_min=1000, chi2_max=9.0):
+def combine_masks(k_threshold=0.85, pt_min=1000):
     mask = (
         kaon_probability_mask(k_threshold) &
         momentum_mask(pt_min) 
-        
     )
     return mask
+
+
 ###Plotting two graphs next to each other
 
 def plot_with_cuts(variable, k_threshold=0.85,
