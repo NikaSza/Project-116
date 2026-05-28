@@ -14,17 +14,8 @@ keys = file.keys()[1]
 tree = file[keys]
 print(tree.keys())
 
-
 #reading branches from the list
 all_branches = tree.keys()
-
-#setting up axis
-px_candidates = [b for b in all_branches if "px" in b.lower()]
-py_candidates = [b for b in all_branches if "py" in b.lower()]
-
-
-px_branch_auto = px_candidates[0]
-py_branch_auto = py_candidates[0]
 
 
 ###Conditions###
@@ -33,11 +24,24 @@ variables = list(tree.keys())
 
 def kaon_probability_mask(k_threshold=0.85): # change the treshold if you want more or less stict cuts
     kplus = tree["Kplus_ProbNNk"].array(library="np")
-
     mask = np.isfinite(kplus) & (kplus > k_threshold)
 
     return mask
 
+def momentum_mask(pt_min=1000): # change the treshold if you want more or less stict cuts
+    pt = tree["B0_PT"].array(library="np")
+    return np.isfinite(pt) & (pt > pt_min)
+#combine conditions -add new masks to variable list here
+
+
+
+def combine_masks(k_threshold=0.85, pt_min=1000, chi2_max=9.0):
+    mask = (
+        kaon_probability_mask(k_threshold) &
+        momentum_mask(pt_min) 
+        
+    )
+    return mask
 ###Plotting two graphs next to each other
 
 def plot_with_cuts(variable, k_threshold=0.85,
@@ -92,8 +96,6 @@ bins_slider = widgets.IntSlider(
     step=1,
     description="Bins:"
 )
-
-
 widgets.interact(
     plot_with_cuts,
     variable=variable_dropdown,
