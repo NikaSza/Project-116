@@ -27,4 +27,6 @@ pip install -r requirements.txt
 
 # Usage
 1. Open the Project-116 folder in VS Code
-2. (update this later)
+2. Place the ROOT files you'd like to analyze in the /data folder
+3. Open data_cutting.ipynb and follow the steps in the notebook
+4. (probably more stuff)
