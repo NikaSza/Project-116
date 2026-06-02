@@ -1,8 +1,13 @@
+
+#CURVE FITTING
+
 import uproot
 import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.display import display
+from scipy.optimize import curve_fit
+
 
 root_file_path = r"/Users/barbatcs/Downloads/python_practical_2026/00385270_00000001_1.dvntuple.root"
 file = uproot.open(root_file_path)
@@ -19,80 +24,12 @@ variables = list(tree.keys())
 
 ### Conditions ###
 
-def momentum_mask(pt_min=1000): 
-    pt = tree["B0_PT"].array(library="np")
-    return np.isfinite(pt) & (pt > pt_min)
 
-def mcorr_mask(mcr_min=2000, mcr_max=5743):
-    mcr = tree["B0_MCORR"].array(library="np")
-    return np.isfinite(mcr) & (mcr > mcr_min) & (mcr < mcr_max)
-
-def b0_ipchi2_ownpv(ipchi_max=1): 
+def b0_ipchi2_ownpv(ipchi_max=15.68): 
     ipchi2 = tree["B0_IPCHI2_OWNPV"].array(library="np")
     return np.isfinite(ipchi2) & (ipchi2 < ipchi_max)
 
-def b0_fdchi2_ownpv(fdchi2_min=500): 
-    fdchi2 = tree["B0_FDCHI2_OWNPV"].array(library="np")
-    return np.isfinite(fdchi2) & (fdchi2 > fdchi2_min)
 
-def b0_dira_ownpv(b0_dira_min=0.999): 
-    b0_dira = tree["B0_DIRA_OWNPV"].array(library="np")
-    return np.isfinite(b0_dira) & (b0_dira > b0_dira_min)
-
-'''def vertex_quality_mask(chi2_ndof_max=5): # < 5 is a standard, safe starting cut
-    chi2 = tree["B0_ENDVERTEX_CHI2"].array(library="np")
-    ndof = tree["B0_ENDVERTEX_NDOF"].array(library="np")
-    
-    # Calculate the reduced chi2
-    reduced_chi2 = chi2 / ndof
-    
-    return np.isfinite(reduced_chi2) & (reduced_chi2 < chi2_ndof_max)'''
-
-def endvertex_chi2(endvertex_chi2_max=40):
-    endvertexchi2 = tree["B0_DIRA_OWNPV"].array(library="np")
-    return np.isfinite(endvertexchi2) & (endvertexchi2 < endvertex_chi2_max)
-
-def kst_892_0_pt(kst_pt_min=5565):
-    kst_pt = tree["Kst_892_PT"].array(library="np")
-    return np.isfinite(kst_pt) & (kst_pt > kst_pt_min)
-
-def kplus_pt(kplus_pt_min=3523):
-    kplus_pt1 = tree["Kplus_PT"].array(library="np")
-    return np.isfinite(kplus_pt1) & (kplus_pt1 > kplus_pt_min)
-
-
-def piminus_pt(piminus_pt_min=2067):
-    piminus_pt1 = tree["piminus_PT"].array(library="np")
-    return np.isfinite(piminus_pt1) & (piminus_pt1 > piminus_pt_min)
-
-
-def muplus_pt(muplus_pt_min=3486):
-    muplus_pt1 = tree["muplus_PT"].array(library="np")
-    return np.isfinite(muplus_pt1) & (muplus_pt1 > muplus_pt_min)
-
-
-def muminus_pt(muminus_pt_min=2917):
-    muminus_pt1 = tree["muminus_PT"].array(library="np")
-    return np.isfinite(muminus_pt1) & (muminus_pt1 > muminus_pt_min)
-
-
-# IS MUON/HAS MUON:
-
-def kplus_ismuon(k_ismu=1): 
-    k_mu = tree["Kplus_isMuon"].array(library="np")
-    return np.isfinite(k_mu) & (k_mu < k_ismu)
-
-def kplus_hasmuon(k_hasmuon=1): 
-    k_mu1 = tree["Kplus_hasMuon"].array(library="np")
-    return np.isfinite(k_mu1) & (k_mu1 < k_hasmuon)
-
-def piminus_ismuon(pi_ismu=1): 
-    pi_mu = tree["piminus_isMuon"].array(library="np")
-    return np.isfinite(pi_mu) & (pi_mu < pi_ismu)
-
-def piminus_hasmuon(pi_hasmuon=1): 
-    pi_mu1 = tree["piminus_hasMuon"].array(library="np")
-    return np.isfinite(pi_mu1) & (pi_mu1 < pi_hasmuon)
                            
 # PROBABILITY THAT STUFF IS KAONS:
 
@@ -101,97 +38,62 @@ def kaon_probability_mask(k_threshold=0.85):
     mask = np.isfinite(kplus) & (kplus > k_threshold)
     return mask
 
-def piminus_prob_k(pi_k_max=0.15): 
-    pi_k = tree["piminus_ProbNNk"].array(library="np")
-    return np.isfinite(pi_k) & (pi_k < pi_k_max)
-
-# PROBABILITY THAT STUFF IS MUONS:
-
-def kplus_probmu(kp_mu_max=0.15): 
-    kp_mu = tree["Kplus_ProbNNmu"].array(library="np")
-    return np.isfinite(kp_mu) & (kp_mu < kp_mu_max)
 
 # PROBABILITY THAT STUFF IS ELECTRONS:
 
-def kp_prob_e(kp_e_max=0.15): 
-    kp_e = tree["Kplus_ProbNNe"].array(library="np")
-    return np.isfinite(kp_e) & (kp_e < kp_e_max)
 
-def muplus_prob_e(muplus_e_max=0.15): 
+def muplus_prob_e(muplus_e_max=0.10): 
     muplus_e = tree["muplus_ProbNNe"].array(library="np")
     return np.isfinite(muplus_e) & (muplus_e < muplus_e_max)
 
-def muminus_prob_e(muminus_e_max=0.15): 
+def muminus_prob_e(muminus_e_max=0.10): 
     muminus_e = tree["muminus_ProbNNe"].array(library="np")
     return np.isfinite(muminus_e) & (muminus_e < muminus_e_max)
 
 # PROBABILITY THAT STUFF IS PROTONS:
 
-def kp_prob_p(kp_p_max=0.15): 
-    kp_p = tree["Kplus_ProbNNp"].array(library="np")
-    return np.isfinite(kp_p) & (kp_p < kp_p_max)
-
-def muminus_prob_p(muminus_p_max=0.15): 
+def muminus_prob_p(muminus_p_max=0.10): 
     muminus_p = tree["muminus_ProbNNp"].array(library="np")
     return np.isfinite(muminus_p) & (muminus_p < muminus_p_max)
 
-def muplus_prob_p(muplus_p_max=0.15): 
+def muplus_prob_p(muplus_p_max=0.10): 
     muplus_p = tree["muplus_ProbNNp"].array(library="np")
     return np.isfinite(muplus_p) & (muplus_p < muplus_p_max)
 
 # PROBABILITY THAT STUFF IS PIONS:
 
-def kp_prob_pi(kp_pi_max=0.15): 
+def kp_prob_pi(kp_pi_max=0.20): 
     kp_pi = tree["Kplus_ProbNNpi"].array(library="np")
     return np.isfinite(kp_pi) & (kp_pi < kp_pi_max)
 
-def muminus_prob_pi(muminus_pi_max=0.15): 
+def muminus_prob_pi(muminus_pi_max=0.70): 
     muminus_pi = tree["muminus_ProbNNpi"].array(library="np")
     return np.isfinite(muminus_pi) & (muminus_pi < muminus_pi_max)
 
-def muplus_prob_pi(muplus_pi_max=0.15): 
+def muplus_prob_pi(muplus_pi_max=0.70): 
     muplus_pi = tree["muplus_ProbNNpi"].array(library="np")
     return np.isfinite(muplus_pi) & (muplus_pi < muplus_pi_max)
 
 
 # combine conditions - add new masks to variable list here
-def combine_masks(k_threshold=0.85, pt_min=1000, mcr_min=2000, mcr_max=5743, ipchi_max=1, kp_e_max=0.15, kp_p_max=0.15, kp_pi_max=0.15, kp_mu_max=0.15, muplus_e_max=0.15, muminus_e_max=0.15, muplus_p_max=0.15, muminus_p_max=0.15, muplus_pi_max=0.15, muminus_pi_max=0.15, pi_ismu=1, pi_hasmuon=1, k_ismu=1, k_hasmuon=1, pi_k_max=0.15, fdchi2_min=500, b0_dira_min=0.999, chi2_ndof_max=5, kst_pt_min=5565, kplus_pt_min=3523, piminus_pt_min=2067, muplus_pt_min=3486, muminus_pt_min=2917, endvertex_chi2_max=40):
+def combine_masks(k_threshold=0.85, ipchi_max=1, kp_pi_max=0.15, muplus_e_max=0.15, muminus_e_max=0.15, muplus_p_max=0.15, muminus_p_max=0.15, muplus_pi_max=0.15, muminus_pi_max=0.15):
     mask = (
         kaon_probability_mask(k_threshold) &
-        momentum_mask(pt_min) &
-        mcorr_mask(mcr_min, mcr_max) &
-        #b0_ipchi2_ownpv(ipchi_max) &
-        kplus_ismuon(k_ismu) &
-        #kplus_hasmuon(k_hasmuon) &
-        piminus_ismuon(pi_ismu) &
-        #piminus_hasmuon(pi_hasmuon) &
-        piminus_prob_k(pi_k_max) &
-        kplus_probmu(kp_mu_max) &
-        kp_prob_e(kp_e_max) &
+        b0_ipchi2_ownpv(ipchi_max) &
         muminus_prob_e(muminus_e_max) &
         muplus_prob_e(muplus_e_max) &
-        #kp_prob_p(kp_p_max)
         muplus_prob_p(muplus_p_max) &
         muminus_prob_p(muminus_p_max) &
-        kp_prob_pi(kp_pi_max) & 
-        #muplus_prob_pi(muplus_pi_max) &
-        #muminus_prob_pi(muminus_pi_max)
-        #b0_fdchi2_ownpv(fdchi2_min) &
-        #b0_dira_ownpv(b0_dira_min) &
-        #vertex_quality_mask(chi2_ndof_max) &
-        #kst_892_0_pt(kst_pt_min) &
-        kplus_pt(kplus_pt_min) &
-        piminus_pt(piminus_pt_min) &
-        muplus_pt(muplus_pt_min) &
-        muminus_pt(muminus_pt_min) &
-        endvertex_chi2(endvertex_chi2_max)
+        muplus_prob_pi(muplus_pi_max) &
+        muminus_prob_pi(muminus_pi_max) &
+        kp_prob_pi(kp_pi_max)     
     )
     return mask
 
 ### Plotting two graphs next to each other ###
 
 # FIX: Added the missing comma at the end of the first line below
-def plot_with_cuts(variable, k_threshold=0.85, pt_min=1000, mcr_min=2000, mcr_max=5743, ipchi_max=1, kp_e_max=0.15, kp_p_max=0.15, kp_pi_max=0.15, kp_mu_max=0.15, muplus_e_max=0.15, muminus_e_max=0.15, muplus_p_max=0.15, muminus_p_max=0.15, muplus_pi_max=0.15, muminus_pi_max=0.15, pi_ismu=1, pi_hasmuon=1, k_ismu=1, k_hasmuon=1, pi_k_max=0.15, fdchi2_min=500, b0_dira_min=0.999, chi2_ndof_max=5, kst_pt_min=5565, kplus_pt_min=3523, piminus_pt_min=2067, muplus_pt_min= 3486, muminus_pt_min=2917, endvertex_chi2_max=40,
+def plot_with_cuts(variable, k_threshold=0.85, ipchi_max=15.68, kp_pi_max=0.20, muplus_e_max=0.10, muminus_e_max=0.10, muplus_p_max=0.10, muminus_p_max=0.10, muplus_pi_max=0.70, muminus_pi_max=0.70,
                    bins=100, x_min=None, x_max=None):
 
     data = tree[variable].array(library="np")
@@ -204,7 +106,7 @@ def plot_with_cuts(variable, k_threshold=0.85, pt_min=1000, mcr_min=2000, mcr_ma
         xlabel = variable
 
     # FIX: Pass the dynamic variables to the function instead of the hardcoded default numbers
-    mask = combine_masks(k_threshold=k_threshold, pt_min=pt_min, mcr_min=mcr_min, mcr_max=mcr_max, ipchi_max=ipchi_max, kp_e_max=kp_e_max, kp_p_max=kp_p_max, kp_pi_max=kp_pi_max, kp_mu_max=kp_mu_max, muplus_e_max=muplus_e_max, muminus_e_max=muminus_e_max, muplus_p_max=muplus_p_max, muminus_p_max=muminus_p_max, muplus_pi_max=muplus_pi_max, muminus_pi_max=muminus_pi_max, pi_ismu=pi_ismu, pi_hasmuon=pi_hasmuon, k_ismu=k_ismu, k_hasmuon=k_hasmuon, pi_k_max=pi_k_max, fdchi2_min=fdchi2_min, b0_dira_min=b0_dira_min, chi2_ndof_max=chi2_ndof_max, kst_pt_min=kst_pt_min, kplus_pt_min=kplus_pt_min, piminus_pt_min=piminus_pt_min, muplus_pt_min=muplus_pt_min, muminus_pt_min=muminus_pt_min, endvertex_chi2_max=endvertex_chi2_max)
+    mask = combine_masks(k_threshold=k_threshold, kp_pi_max=kp_pi_max, ipchi_max=ipchi_max, muplus_e_max=muplus_e_max, muminus_e_max=muminus_e_max, muplus_p_max=muplus_p_max, muminus_p_max=muminus_p_max, muplus_pi_max=muplus_pi_max, muminus_pi_max=muminus_pi_max)
 
     filtered_data = data[mask]
 
@@ -227,6 +129,24 @@ def plot_with_cuts(variable, k_threshold=0.85, pt_min=1000, mcr_min=2000, mcr_ma
     print("Original events:", len(data))
     print("Events after cut:", len(filtered_data))
     print("Removed events:", len(data) - len(filtered_data))
+
+    # --- NEW: Run the fit dynamically if we are looking at the mass! ---
+    if variable == "B0_MM":
+        print("\n--- Running Mass Fit ---")
+        
+        # Use the widget's x_min and x_max if you typed them in, 
+        # otherwise default to the safe B0 fit window (5100 - 5400)
+        fit_min = x_min if x_min is not None else 5100
+        fit_max = x_max if x_max is not None else 5400
+        
+        # Count how many events are actually inside our fit window
+        events_in_fit_window = np.sum((filtered_data >= fit_min) & (filtered_data <= fit_max))
+        print(f"Total events in cut: {len(filtered_data)}")
+        print(f"Events inside fit window ({fit_min}-{fit_max}): {events_in_fit_window}")
+        
+        # Run the fit!
+        fit_and_plot_mass(filtered_data, bins=bins, mass_min=fit_min, mass_max=fit_max)
+
 
 
 ### Interactive part ###
@@ -251,4 +171,88 @@ widgets.interact(
     bins=bins_slider,
     x_min=widgets.FloatText(value=None, description="x min"),
     x_max=widgets.FloatText(value=9000, description="x max")
+
 )
+
+
+# 1. Define the mathematical models
+def gaussian_signal(x, amplitude, mean, stddev):
+    """The signal peak"""
+    return amplitude * np.exp(-((x - mean)**2) / (2 * stddev**2))
+
+def exponential_background(x, c0, c1):
+    """The combinatorial background"""
+    return c0 * np.exp(c1 * x)
+
+def combined_model(x, amplitude, mean, stddev, c0, c1):
+    """Signal + Background"""
+    return gaussian_signal(x, amplitude, mean, stddev) + exponential_background(x, c0, c1)
+
+def fit_and_plot_mass(mass_data, bins=300, mass_min=4000, mass_max=6000):
+    # 2. Create the histogram data to fit
+    # We need the x (bin centers) and y (number of events per bin) points
+    counts, bin_edges = np.histogram(mass_data, bins=bins, range=(mass_min, mass_max))
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    bin_width = bin_edges[1] - bin_edges[0]
+    
+    # Ignore empty bins to avoid division-by-zero errors in advanced fitting
+    nonzero_mask = counts > 0
+    x_data = bin_centers[nonzero_mask]
+    y_data = counts[nonzero_mask]
+
+    # 3. Provide initial guesses for the fit parameters
+    # [amplitude, mean, stddev, background_c0, background_c1]
+    initial_guess = [max(counts), 5279, 20, counts[0], -0.001]
+    
+    # 4. Perform the curve fit
+    try:
+        popt, pcov = curve_fit(combined_model, x_data, y_data, p0=initial_guess)
+        amplitude, mean, stddev, c0, c1 = popt
+        
+        # 5. Calculate the Number of Signal Events
+        # The integral of a Gaussian gives the total area. 
+        # Divide by bin_width to convert area to the number of events in the histogram.
+        n_signal_events = (amplitude * np.abs(stddev) * np.sqrt(2 * np.pi)) / bin_width
+        
+        # Calculate errors on the parameters (square root of the covariance matrix diagonals)
+        perr = np.sqrt(np.diag(pcov))
+        n_signal_error = (perr[0] * np.abs(stddev) * np.sqrt(2 * np.pi)) / bin_width # simplified error
+        
+        print(f"--- Fit Results ---")
+        print(f"B0 Mass Mean: {mean:.2f} MeV/c^2")
+        print(f"Mass Resolution (StdDev): {np.abs(stddev):.2f} MeV/c^2")
+        print(f"Number of Signal Events: {n_signal_events:.0f} ± {n_signal_error:.0f}")
+        
+    except RuntimeError:
+        print("Error: Curve fit failed to converge. Try adjusting the initial guesses or cuts.")
+        return
+
+    # 6. Plotting the results
+    x_plot = np.linspace(mass_min, mass_max, 500)
+    
+    plt.figure(figsize=(8, 6))
+    
+    # Plot original data as points with error bars (Poisson errors)
+    plt.errorbar(x_data, y_data, yerr=np.sqrt(y_data), fmt='o', color='black', label='Data', markersize=4)
+    
+    # Plot the total fit
+    plt.plot(x_plot, combined_model(x_plot, *popt), color='red', linewidth=2, label='Total Fit')
+    
+    # Plot the signal component
+    plt.plot(x_plot, gaussian_signal(x_plot, amplitude, mean, stddev), color='blue', linestyle='--', label='Signal (Gaussian)')
+    
+    # Plot the background component
+    plt.plot(x_plot, exponential_background(x_plot, c0, c1), color='green', linestyle='--', label='Background (Exponential)')
+    
+    plt.title("B0 Mass Distribution Fit")
+    plt.xlabel("B0_MM [MeV/c^2]")
+    plt.ylabel(f"Events / {bin_width:.1f} MeV/c^2")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
