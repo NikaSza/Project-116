@@ -9,7 +9,7 @@ ipython==9.13.0
 plotly==6.7.0
 ipyfilechooser==0.6.0
 
-# BDT 
-scikit-learn=1.8.0
+# Boosted Decision Tree (BDT_X.py) 
+scikit-learn==1.8.0
 scipy==1.17.1
 pandas==3.0.3
