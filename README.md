@@ -1,12 +1,24 @@
 # Project-116
-A Jupyter notebook for cutting and analyzing LHCb data
+A collection of Python and Jupyter notebook-based tools for analyzing and filtering LHCb data.
 
 # Description
 (update this later)
 
 # Requirements
 - Python 3.14.X
-- (update this later)
+- General
+    - NumPy
+    -  Matplotlib
+    - Uproot
+- Jupyter 
+    - IPyWidgets
+    - iPython
+    - iPyFileChooser
+    - Plotly
+- BDT
+    - Scikit-learn
+    - SciPy
+    - Pandas
 
 # Installation
 1. Install the appropriate version of Python onto your system
@@ -26,7 +38,9 @@ pip install -r requirements.txt
 ```
 
 # Usage
+## Rectilinear data cutting
 1. Open the Project-116 folder in VS Code
 2. Place the ROOT files you'd like to analyze in the /data folder
 3. Open data_cutting.ipynb and follow the steps in the notebook
-4. (probably more stuff)
+## Boosted Decision Tree cutting
+1. (update this later)
