@@ -1,0 +1,10 @@
+Variable,Min,Max
+B0_IPCHI2_OWNPV,0.18,15.68
+Kplus_ProbNNpi,0,0.2
+muplus_ProbNNpi,0,0.7
+muminus_ProbNNpi,0,0.7
+muplus_ProbNNp,0,0.1
+muminus_ProbNNp,0,0.1
+muminus_ProbNNe,0,0.1
+muplus_ProbNNe,0,0.1
+
