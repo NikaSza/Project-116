@@ -5,6 +5,7 @@ A collection of Python and Jupyter notebook-based tools for analyzing and filter
 (update this later)
 
 # Requirements
+**A full list of dependencies is provided in `requirements.txt`**
 - Python 3.14.X
 - General
     - NumPy
@@ -44,3 +45,5 @@ pip install -r requirements.txt
 3. Open data_cutting.ipynb and follow the steps in the notebook
 ## Boosted Decision Tree cutting
 1. (update this later)
+## Yield ratio determination
+1. (update later)
