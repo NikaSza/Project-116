@@ -1,0 +1,218 @@
+import uproot
+import numpy as np
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from scipy.optimize import curve_fit
+
+
+root_file_path = r"C:\Users\chris\Downloads\00385270_00000001_1.dvntuple.root"
+
+file = uproot.open(root_file_path)
+
+print(file.keys())
+
+keys = file.keys()[1]
+tree = file[keys]
+
+print(tree.keys())
+
+
+def plot(variable, bins=100, x_min=0, x_max=0):
+    data = tree[variable].array(library="np")
+    data = data[np.isfinite(data)]
+
+    if variable == "B0_PT":
+        data = data / 1000.0
+
+    if variable == "B0_MM":
+        data = data / 1000.0
+
+    if x_min == 0 and x_max == 0:
+        my_range = None
+    else:
+        my_range = (x_min, x_max)
+
+    plt.figure(figsize=(8, 5))
+    plt.hist(data, bins=bins, range=my_range, histtype="step", linewidth=2)
+    plt.xlabel(variable)
+    plt.ylabel("Counts")
+    plt.title(variable)
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+
+variables = list(tree.keys())
+
+mass = tree["B0_MM"].array(library="np") / 1000.0
+kplus = tree["Kplus_ProbNNk"].array(library="np")
+
+mask_all = np.isfinite(mass) & np.isfinite(kplus)
+mask_cut = mask_all & (kplus > 0.85)
+
+mass_cut = mass[mask_cut]
+
+bins = 80
+x_min = 5.0
+x_max = 5.6
+
+counts, bin_edges = np.histogram(
+    mass_cut,
+    bins=bins,
+    range=(x_min, x_max)
+)
+
+bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+bin_width = bin_edges[1] - bin_edges[0]
+
+
+def fit_func(x, A, mu, sigma, B, lamb):
+    signal = A * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+    background = B * np.exp(-lamb * (x - x_min))
+    return signal + background
+
+
+A0 = np.max(counts)
+mu0 = 5.28
+sigma0 = 0.025
+B0 = counts[0]
+lamb0 = 2.0
+
+p0 = [A0, mu0, sigma0, B0, lamb0]
+
+lower_bounds = [0, 5.25, 0.005, 0, 0]
+upper_bounds = [np.inf, 5.32, 0.08, np.inf, 20]
+
+popt, pcov = curve_fit(
+    fit_func,
+    bin_centers,
+    counts,
+    p0=p0,
+    bounds=(lower_bounds, upper_bounds),
+    maxfev=20000
+)
+
+A, mu, sigma, B, lamb = popt
+
+fit_counts = fit_func(bin_centers, A, mu, sigma, B, lamb)
+
+ratio = np.zeros(len(counts))
+
+for i in range(len(counts)):
+    if fit_counts[i] > 0:
+        ratio[i] = counts[i] / fit_counts[i]
+    else:
+        ratio[i] = 0
+
+signal_yield = A * sigma * np.sqrt(2 * np.pi) / bin_width
+
+print("Events after cut:", len(mass_cut))
+print("Mean:", mu)
+print("Sigma:", sigma)
+print("Signal yield:", signal_yield)
+
+x_fit = np.linspace(x_min, x_max, 1000)
+
+signal_only = A * np.exp(-0.5 * ((x_fit - mu) / sigma) ** 2)
+background_only = B * np.exp(-lamb * (x_fit - x_min))
+total_fit = signal_only + background_only
+
+
+plt.figure(figsize=(8, 5))
+plt.hist(
+    mass_cut,
+    bins=bins,
+    range=(x_min, x_max),
+    histtype="step",
+    linewidth=2,
+    label="Data after cut"
+)
+plt.xlabel(r"$B^0$ mass [GeV/$c^2$]")
+plt.ylabel("Counts")
+plt.title(r"$B^0$ mass after Kplus cut")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+
+
+
+
+
+
+plt.figure(figsize=(8, 5))
+plt.plot(
+    x_fit,
+    signal_only,
+    linestyle="--",
+    linewidth=2,
+    label="Signal"
+)
+plt.plot(
+    x_fit,
+    background_only,
+    linestyle="--",
+    linewidth=2,
+    label="Background"
+)
+plt.plot(
+    x_fit,
+    total_fit,
+    linewidth=2,
+    label="Signal + background"
+)
+plt.xlabel(r"$B^0$ mass [GeV/$c^2$]")
+plt.ylabel("Counts")
+plt.title("Fit components")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+plt.figure(figsize=(8, 4))
+plt.plot(
+    bin_centers,
+    ratio,
+    marker="o",
+    linestyle="none",
+    markersize=4
+)
+plt.axhline(1, linestyle="--", linewidth=1)
+plt.xlabel(r"$B^0$ mass [GeV/$c^2$]")
+plt.ylabel("Data / Fit")
+plt.title("Ratio plot")
+plt.ylim(0, 2)
+plt.grid(True, alpha=0.3)
+plt.show()
+
+
+variable_dropdown = widgets.Dropdown(
+    options=variables,
+    description="Variable:"
+)
+
+bins_slider = widgets.IntSlider(
+    value=100,
+    min=1,
+    max=300,
+    step=1,
+    description="Bins:"
+)
+
+x_min_box = widgets.FloatText(
+    value=5.0,
+    description="x min"
+)
+
+x_max_box = widgets.FloatText(
+    value=5.6,
+    description="x max"
+)
+
+widgets.interact(
+    plot,
+    variable=variable_dropdown,
+    bins=bins_slider,
+    x_min=x_min_box,
+    x_max=x_max_box
+)
