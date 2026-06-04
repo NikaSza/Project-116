@@ -5,21 +5,9 @@ A collection of Python and Jupyter notebook-based tools for analyzing and filter
 (update this later)
 
 # Requirements
-**A full list of dependencies is provided in `requirements.txt`**
 - Python 3.14.X
-- General
-    - NumPy
-    -  Matplotlib
-    - Uproot
-- Jupyter 
-    - IPyWidgets
-    - iPython
-    - iPyFileChooser
-    - Plotly
-- BDT
-    - Scikit-learn (called as `sklearn`)
-    - SciPy
-    - Pandas
+- A full list of dependencies is provided in `requirements.txt`
+- Please note that the BDT library `sklearn` is downloaded through pip as `scikit-learn`
 
 # Installation
 1. Install the appropriate version of Python onto your system
