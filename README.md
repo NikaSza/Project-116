@@ -17,7 +17,7 @@ A collection of Python and Jupyter notebook-based tools for analyzing and filter
     - iPyFileChooser
     - Plotly
 - BDT
-    - Scikit-learn
+    - Scikit-learn (called as `sklearn`)
     - SciPy
     - Pandas
 
