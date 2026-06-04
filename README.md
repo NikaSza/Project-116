@@ -2,12 +2,13 @@
 A collection of Python and Jupyter notebook-based tools for analyzing and filtering LHCb data.
 
 # Description
-(update this later)
+**`BDT_X.py`**: A Python script for creating a Boosted Decision Tree to cut and fit LHCb data from a ROOT file.
+**`data_cutting.ipynb`**: A Jupyter notebook for making interactive rectilinear cuts on LHCb data from a ROOT file. It also includes a script for generating plots from our final cuts we've saved to `final_cuts.csv`. 
 
 # Requirements
 - Python 3.14.X
 - A full list of dependencies is provided in `requirements.txt`
-    - Please note that the BDT library `sklearn` is downloaded through pip as `scikit-learn`
+    - Please note, if manually installing dependencies, that the BDT library `sklearn` is downloaded through pip as `scikit-learn`
 
 # Installation
 1. Install the appropriate version of Python onto your system
@@ -18,7 +19,7 @@ cd Project-116
 ```
 3. Create a virtual environment with
 ```
-python -m venv .venv_project_116
+python3 -m venv .venv_project_116
 source .venv_project_116/bin/activate
 ```
 4. Finally, install the required packages using 
