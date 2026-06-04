@@ -7,7 +7,7 @@ A collection of Python and Jupyter notebook-based tools for analyzing and filter
 # Requirements
 - Python 3.14.X
 - A full list of dependencies is provided in `requirements.txt`
-- Please note that the BDT library `sklearn` is downloaded through pip as `scikit-learn`
+    - Please note that the BDT library `sklearn` is downloaded through pip as `scikit-learn`
 
 # Installation
 1. Install the appropriate version of Python onto your system
