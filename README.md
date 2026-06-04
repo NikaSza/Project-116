@@ -2,8 +2,8 @@
 A collection of Python and Jupyter notebook-based tools for analyzing and filtering LHCb data.
 
 # Description
-**`BDT_X.py`**: A Python script for creating a Boosted Decision Tree to cut and fit LHCb data from a ROOT file.
-**`data_cutting.ipynb`**: A Jupyter notebook for making interactive rectilinear cuts on LHCb data from a ROOT file. It also includes a script for generating plots from our final cuts we've saved to `final_cuts.csv`. 
+- **`BDT_X.py`**: A Python script for creating a Boosted Decision Tree to cut and fit LHCb data from a ROOT file.
+- **`data_cutting.ipynb`**: A Jupyter notebook for making interactive rectilinear cuts on LHCb data from a ROOT file. It also includes a script for generating plots from our final cuts we've saved to `final_cuts.csv`. 
 
 # Requirements
 - Python 3.14.X
