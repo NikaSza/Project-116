@@ -17,7 +17,7 @@ from IPython.display import display
 # ==============================================================================
 print("Initializing pipeline and loading ROOT file...")
 
-root_file_path = r"C:\Users\Jonas\Documents\Maastricht University\MSP\Year 1\Period 6\Root_files\GoodMuon\00385292_00000004_1.dvntuple.root"
+root_file_path = r"/Users/barbatcs/Downloads/python_practical_2026/00385270_00000001_1.dvntuple.root"
 file = uproot.open(root_file_path)
 tree = file["MyDecayTree_muons/DecayTree;1"]
 
@@ -212,7 +212,6 @@ print("="*50)
 
 if not fit_results['bdt']['success'] or not fit_results['manual']['success']:
     print("Warning: One of your models failed to fit properly. Using placeholders fallback values for integration demo.")
-    # Fallback to defaults from script 3 if calculations break down on small trees
     p_bdt = [6554.16, 5279.74, 18.11, 0.0, 0.0]
     p_man = [5607.87, 5280.07, 17.26, 511.71, -0.00391]
 else:
@@ -233,44 +232,64 @@ def dynamic_manual_signal(mass):
     return p_man[0] * np.exp(-0.5 * ((mass - p_man[1]) / p_man[2])**2)
 
 def dynamic_manual_background(mass):
-    # Mapping custom flipped signs safely between your structures
     slope = p_man[4] if p_man[4] < 0 else -p_man[4]
     return p_man[3] * np.exp(slope * (mass - 5000.0))
 
 def dynamic_manual_total(mass):
     return dynamic_manual_signal(mass) + dynamic_manual_background(mass)
 
-# Numerical Definite Integration using Quadpack
+# FIX: Calculate bin width to correct the integral values
+bin_width = (mass_max - mass_min) / bins_fit
+
+# Numerical Definite Integration using Quadpack (Divided by bin_width to get true event counts)
 bdt_sig_area, _ = quad(dynamic_bdt_signal, mass_min, mass_max)
+bdt_sig_events = bdt_sig_area / bin_width
+
 bdt_bkg_area, _ = quad(dynamic_bdt_background, mass_min, mass_max)
-bdt_total_area = bdt_sig_area + bdt_bkg_area
-bdt_purity = (bdt_sig_area / bdt_total_area) * 100 if bdt_total_area > 0 else 0
+bdt_bkg_events = bdt_bkg_area / bin_width
+
+bdt_total_events = bdt_sig_events + bdt_bkg_events
+bdt_purity = (bdt_sig_events / bdt_total_events) * 100 if bdt_total_events > 0 else 0
 
 manual_sig_area, _ = quad(dynamic_manual_signal, mass_min, mass_max)
+manual_sig_events = manual_sig_area / bin_width
+
 manual_bkg_area, _ = quad(dynamic_manual_background, mass_min, mass_max)
-manual_total_area = manual_sig_area + manual_bkg_area
-manual_purity = (manual_sig_area / manual_total_area) * 100 if manual_total_area > 0 else 0
+manual_bkg_events = manual_bkg_area / bin_width
+
+manual_total_events = manual_sig_events + manual_bkg_events
+manual_purity = (manual_sig_events / manual_total_events) * 100 if manual_total_events > 0 else 0
 
 # Comparative Analysis Area Plot
 m_axis = np.linspace(mass_min, mass_max, 1000)
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(12, 7))
 
-plt.plot(m_axis, dynamic_bdt_total(m_axis), color='darkgreen', linestyle='-', linewidth=2.5, 
-         label=rf'BDT Selection (Total Fit: $\mu$={p_bdt[1]:.2f}, $\sigma$={p_bdt[2]:.2f})')
+# --- NEW: Plot the actual BDT Data Points ---
+plt.errorbar(bin_centers_bdt, counts_bdt, yerr=np.sqrt(counts_bdt), fmt='o', color='darkgreen', 
+             markersize=5, alpha=0.7, label='BDT Data')
 
-plt.plot(m_axis, dynamic_manual_total(m_axis), color='darkred', linestyle='-', linewidth=2.5, 
-         label=rf'Manual Selection (Total Fit: $\mu$={p_man[1]:.2f}, $\sigma$={p_man[2]:.2f})')
+# --- NEW: Plot the actual Manual Data Points ---
+plt.errorbar(bin_centers_man, counts_man, yerr=np.sqrt(counts_man), fmt='s', color='darkred', 
+             markersize=5, alpha=0.7, label='Manual Data')
+
+# Plot the fits
+plt.plot(m_axis, dynamic_bdt_total(m_axis), color='limegreen', linestyle='-', linewidth=2.5,
+         label=rf'BDT Fit ($\mu$={p_bdt[1]:.2f}, $\sigma$={p_bdt[2]:.2f})')
+
+plt.plot(m_axis, dynamic_manual_total(m_axis), color='salmon', linestyle='-', linewidth=2.5,
+         label=rf'Manual Fit ($\mu$={p_man[1]:.2f}, $\sigma$={p_man[2]:.2f})')
 
 # Shade background contamination
-plt.plot(m_axis, dynamic_manual_background(m_axis), color='red', linestyle='--', linewidth=1.5, label='Leftover Background (Manual)')
-plt.fill_between(m_axis, 0, dynamic_manual_background(m_axis), color='red', alpha=0.1, label='Background Noise Region')
+plt.plot(m_axis, dynamic_manual_background(m_axis), color='red', linestyle='--', linewidth=1.5)
+plt.fill_between(m_axis, 0, dynamic_manual_background(m_axis), color='red', alpha=0.1, label='Manual Background')
 
-if p_bdt[3] > 0.1: # Show BDT background if not completely clean/zeroed out
-    plt.plot(m_axis, dynamic_bdt_background(m_axis), color='green', linestyle=':', linewidth=1.5, label='Leftover Background (BDT)')
+if p_bdt[3] > 0.1: 
+    plt.plot(m_axis, dynamic_bdt_background(m_axis), color='green', linestyle=':', linewidth=1.5)
+    plt.fill_between(m_axis, 0, dynamic_bdt_background(m_axis), color='green', alpha=0.1, label='BDT Background')
 
-plt.title(r'Analytical & Area Comparison: BDT vs. Manual Cuts ($B^0 \rightarrow K^{*0}\mu^+\mu^-$)')
-plt.xlabel('Invariant Mass $m$ [MeV]')
-plt.ylabel('Analytical Amplitude (Events/Bin scale)')
+plt.title(r'Analytical & Area Comparison: BDT vs. Manual Cuts ($B^0 \rightarrow K^{*0}\mu^+\mu^-$)', fontsize=14)
+plt.xlabel('Invariant Mass $m$ [MeV/$c^2$]', fontsize=12)
+plt.ylabel(f'Events / {bin_width:.1f} MeV/$c^2$', fontsize=12)
 plt.legend(loc='upper right', fontsize=9)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -283,9 +302,9 @@ print("="*75)
 print(f"{'Mass Mean (mu)':<28} | {f'{p_bdt[1]:.2f} MeV':<20} | {f'{p_man[1]:.2f} MeV':<20}")
 print(f"{'Mass Resolution (sigma)':<28} | {f'{p_bdt[2]:.2f} MeV':<20} | {f'{p_man[2]:.2f} MeV':<20}")
 print("-"*75)
-print(f"{'SIGNAL AREA (True Events)':<28} | {bdt_sig_area:<20.1f} | {manual_sig_area:<20.1f}")
-print(f"{'BACKGROUND AREA (Noise)':<28} | {bdt_bkg_area:<20.1f} | {manual_bkg_area:<20.1f}")
-print(f"{'TOTAL AREA under fit':<28} | {bdt_total_area:<20.1f} | {manual_total_area:<20.1f}")
+print(f"{'SIGNAL EVENTS':<28} | {bdt_sig_events:<20.0f} | {manual_sig_events:<20.0f}")
+print(f"{'BACKGROUND EVENTS':<28} | {bdt_bkg_events:<20.0f} | {manual_bkg_events:<20.0f}")
+print(f"{'TOTAL EVENTS under fit':<28} | {bdt_total_events:<20.0f} | {manual_total_events:<20.0f}")
 print("-"*75)
 print(f"{'SAMPLE PURITY (%)':<28} | {bdt_purity:<19.2f}% | {manual_purity:<19.2f}%")
 print("="*75)
