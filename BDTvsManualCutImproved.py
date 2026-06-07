@@ -11,6 +11,7 @@ from scipy.stats import ks_2samp
 from scipy.integrate import quad
 import ipywidgets as widgets
 from IPython.display import display
+from datetime import datetime, timedelta, timezone
 
 # ==============================================================================
 # 1. INITIALIZATION & DATA LOADING
@@ -308,3 +309,53 @@ print(f"{'TOTAL EVENTS under fit':<28} | {bdt_total_events:<20.0f} | {manual_tot
 print("-"*75)
 print(f"{'SAMPLE PURITY (%)':<28} | {bdt_purity:<19.2f}% | {manual_purity:<19.2f}%")
 print("="*75)
+# ==============================================================================
+# 6. GPS TIME + LUMINOSITY FROM SEPARATE ROOT TREES
+# ==============================================================================
+
+print("\n" + "="*75)
+print("GPS TIME AND LUMINOSITY CHECK")
+print("="*75)
+
+# CHANGE THESE NAMES after checking file.keys()
+gps_tree_name = "MyDecayTree_muons/DecayTree;1"
+lumi_tree_name = "GetIntegratedLuminosity/LumiTuple;1"
+
+gps_branch_name = "GpsTime"              # change if different
+lumi_branch_name = "IntegratedLuminosity" # change if different
+
+try:
+    gps_tree = file[gps_tree_name]
+    lumi_tree = file[lumi_tree_name]
+
+    gps_data = gps_tree.arrays([gps_branch_name], library="pd")
+    lumi_data = lumi_tree.arrays([lumi_branch_name], library="pd")
+    
+
+    GPS_EPOCH = datetime(1980, 1, 6, tzinfo=timezone.utc)
+    LEAP_SECONDS = 18
+
+    def gps_to_utc(gps_seconds):
+        return GPS_EPOCH + timedelta(seconds=float(gps_seconds) - LEAP_SECONDS)
+
+    # Take first GPS time and first luminosity value as file-level reference
+    gps_value_raw = gps_data[gps_branch_name].iloc[0]
+    lumi_value = lumi_data[lumi_branch_name].iloc[0]
+
+    print(f"Raw time value: {gps_value_raw}")
+
+    # This value is in microseconds since Unix epoch, not GPS seconds
+    utc_time = datetime.fromtimestamp(gps_value_raw / 1e6, tz=timezone.utc)
+    year = utc_time.year
+
+    print("\nFile-level information:")
+    print(f"Raw time value: {gps_value_raw}")
+    print(f"UTC time: {utc_time}")
+    print(f"Experiment year: {year}")
+    print(f"Integrated luminosity: {lumi_value}")
+
+except KeyError as e:
+    print("\nBranch or tree name not found.")
+    print(f"Missing name: {e}")
+    print("\nCheck the printed file/tree keys above and update:")
+    print("gps_tree_name, lumi_tree_name, gps_branch_name, lumi_branch_name")
